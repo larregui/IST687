@@ -13,9 +13,9 @@ https://github.com/larregui/IST687/blob/master/winequality-red.csv
 https://github.com/larregui/IST687/blob/master/winequality-white.csv
 
 ```{r readWines}
-readURL <- function(inputURL)  #Begin function named readStates that takes a URL
+readURL <- function(inputURL)  #Begin function named readURL that takes a URL
 {
-  csvFile <- read.csv(url(inputURL))  #assign the results of the URL call as a csv file to a dataframe named csvFile
+  csvFile <- read.csv(url(inputURL), sep = ';')  #assign the results of the URL call as a csv file to a dataframe named csvFile. Added sep = ';' to seperate the data into columns
   return(csvFile)  # return the dataframe
 }
 
@@ -27,12 +27,15 @@ str(whiteWine)
 summary(redWine)
 summary(whiteWine)
 
+
 ```
 ```{r cleanWine}
 #THe datasets only have one column of data.  The column names are separated by periods the data by semi-colons
 #1. Create columns 
 #2.  separate the data into the columns
 #3.  Verify no NAs
+redWine <- na.omit(redWine)
+whiteWine<-na.omit (whiteWine)
 
 ```
 
@@ -40,10 +43,43 @@ summary(whiteWine)
 #1.  Create visulaizations for the data
 #heat maps, histograms and scatter plots?
 
+#Histograms
+hist(redWine$quality)
+hist(whiteWine$quality)
+
+library(grid)
+library(gridExtra)
+h1 <- ggplot(aes(density), data = redWine) + geom_histogram(bins = 30) 
+
+h2 <- ggplot(aes(alcohol), data = redWine) + geom_histogram(bins = 30)
+
+h3 <- ggplot(aes(quality), data = redWine) + geom_histogram(bins = 7)
+
+
+grid.arrange(h1,h2,h3,ncol=2)
+
 ```
 
 ```{r correlationWine}
 #1. Create the correlation matrix
+
+#Red Wine Correlation Matrix
+
+#install.packages("corrplot")
+library(corrplot)
+red_cor <- cor(redWine)
+round(red_cor, 2)
+corrplot(red_cor, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+
+#White Wine Correlation Matrix
+
+#install.packages("corrplot")
+library(corrplot)
+white_cor <- cor(whiteWine)
+round(white_cor, 2)
+corrplot(white_cor, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
 ```
 
 ```{r learingWine}
