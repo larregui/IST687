@@ -1,0 +1,53 @@
+---
+title: "Group 4 Project"
+author: "Laura Larregui, Angela Garcia, John Christman"
+date: "11/18/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+https://github.com/larregui/IST687/blob/master/winequality-red.csv
+https://github.com/larregui/IST687/blob/master/winequality-white.csv
+
+```{r readWines}
+readURL <- function(inputURL)  #Begin function named readStates that takes a URL
+{
+  csvFile <- read.csv(url(inputURL))  #assign the results of the URL call as a csv file to a dataframe named csvFile
+  return(csvFile)  # return the dataframe
+}
+
+redWine <- readURL("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv")
+whiteWine <- readURL("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv")
+
+str(redWine)
+str(whiteWine)
+summary(redWine)
+summary(whiteWine)
+
+```
+```{r cleanWine}
+#THe datasets only have one column of data.  The column names are separated by periods the data by semi-colons
+#1. Create columns 
+#2.  separate the data into the columns
+#3.  Verify no NAs
+
+```
+
+```{r visualizeWine echo=FALSE}
+#1.  Create visulaizations for the data
+#heat maps, histograms and scatter plots?
+
+```
+
+```{r correlationWine}
+#1. Create the correlation matrix
+```
+
+```{r learingWine}
+#Machine learning techniques to see if we can train the system to pick a good wine
+```
+
+
