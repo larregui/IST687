@@ -43,6 +43,11 @@ whiteWine<-na.omit (whiteWine)
 #1.  Create visulaizations for the data
 #heat maps, histograms and scatter plots?
 
+#Heatmaps
+col<- colorRampPalette(c("blue", "white", "red"))(20)
+heatmap(x = red_cor, col = col, symm = TRUE)
+heatmap(x = white_cor, col = col, symm = TRUE)
+
 #Histograms
 hist(redWine$quality)
 hist(whiteWine$quality)
@@ -73,6 +78,7 @@ corrplot(red_cor, type = "upper", order = "hclust",
          tl.col = "black", tl.srt = 45)
 #Positive correlations are displayed in blue and negative correlations in red color. Color intensity and the size of the circle are proportional to the correlation coefficients.
 
+#Correlation matrix with numbers
 corrplot(red_cor, method = 'number', type = "upper", order = "hclust", 
          tl.col = "black", tl.srt = 45)
 
@@ -84,6 +90,7 @@ white_cor <- cor(whiteWine)
 round(white_cor, 2)
 corrplot(white_cor, type = "upper", order = "hclust", 
          tl.col = "black", tl.srt = 45)
+#Correlation matrix with numbers
 corrplot(white_cor, method = 'number',type = "upper", order = "hclust", 
          tl.col = "black", tl.srt = 45)
 ```
