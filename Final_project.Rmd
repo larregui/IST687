@@ -71,6 +71,8 @@ red_cor <- cor(redWine)
 round(red_cor, 2)
 corrplot(red_cor, type = "upper", order = "hclust", 
          tl.col = "black", tl.srt = 45)
+corrplot(red_cor, method = 'number', type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
 
 #White Wine Correlation Matrix
 
@@ -79,6 +81,8 @@ library(corrplot)
 white_cor <- cor(whiteWine)
 round(white_cor, 2)
 corrplot(white_cor, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+corrplot(white_cor, method = 'number',type = "upper", order = "hclust", 
          tl.col = "black", tl.srt = 45)
 ```
 
