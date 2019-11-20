@@ -71,6 +71,8 @@ red_cor <- cor(redWine)
 round(red_cor, 2)
 corrplot(red_cor, type = "upper", order = "hclust", 
          tl.col = "black", tl.srt = 45)
+#Positive correlations are displayed in blue and negative correlations in red color. Color intensity and the size of the circle are proportional to the correlation coefficients.
+
 corrplot(red_cor, method = 'number', type = "upper", order = "hclust", 
          tl.col = "black", tl.srt = 45)
 
