@@ -9,9 +9,6 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-https://github.com/larregui/IST687/blob/master/winequality-red.csv
-https://github.com/larregui/IST687/blob/master/winequality-white.csv
-
 ```{r readWines}
 readURL <- function(inputURL)  #Begin function named readURL that takes a URL
 {
@@ -54,6 +51,7 @@ hist(whiteWine$quality)
 
 library(grid)
 library(gridExtra)
+library (ggplot2)
 h1 <- ggplot(aes(density), data = redWine) + geom_histogram(bins = 30) 
 
 h2 <- ggplot(aes(alcohol), data = redWine) + geom_histogram(bins = 30)
