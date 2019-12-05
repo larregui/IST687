@@ -46,19 +46,17 @@ heatmap(x = red_cor, col = col, symm = TRUE)
 heatmap(x = white_cor, col = col, symm = TRUE)
 
 #Histograms
-hist(redWine$quality)
-hist(whiteWine$quality)
+
+hist(redWine$quality, main = "Red Wine Distribution", xlab = "Quality", col ="red")
+hist(whiteWine$quality, main = "White Wine Distribution", xlab = "Quality", col = "beige")
 
 library(grid)
 library(gridExtra)
 library (ggplot2)
-h1 <- ggplot(aes(density), data = redWine) + geom_histogram(bins = 30) 
 
-h2 <- ggplot(aes(alcohol), data = redWine) + geom_histogram(bins = 30)
-
-h3 <- ggplot(aes(quality), data = redWine) + geom_histogram(bins = 7)
-
-
+h1 <- ggplot(aes(density), data = redWine) + geom_histogram(bins = 30,color="white") 
+h2 <- ggplot(aes(alcohol), data = redWine) + geom_histogram(bins = 30, color="white")
+h3 <- ggplot(aes(quality), data = redWine) + geom_histogram(bins = 7, color="white")
 grid.arrange(h1,h2,h3,ncol=2)
 
 ```
