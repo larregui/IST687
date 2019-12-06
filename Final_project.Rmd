@@ -134,6 +134,17 @@ corrplot(white_cor, type = "upper", order = "hclust",
 #Correlation matrix with numbers
 corrplot(white_cor, method = 'number',type = "upper", order = "hclust", 
          tl.col = "black", tl.srt = 45)
+
+#Quality correlations
+dfred_cor<-data.frame(red_cor)
+dfwhite_cor<-data.frame(white_cor)
+names<-row.names(dfred_cor)
+
+QualityCor<-round(cbind(dfred_cor$quality,dfwhite_cor$quality),digits=4)
+colnames(QualityCor)<-c("Red Quality", "White Quality")
+row.names(QualityCor)<-names
+View(QualityCor)
+
 ##Reference: http://www.sthda.com/english/wiki/correlation-matrix-a-quick-start-guide-to-analyze-format-and-visualize-a-correlation-matrix-using-r-software
 ```
 
