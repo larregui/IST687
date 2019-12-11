@@ -38,8 +38,32 @@ whiteWine<-na.omit (whiteWine)
 
 ```
 
+<<<<<<< HEAD
 ```{r visualizeWine }
 #1.  Create visulaizations for the data
+=======
+```{r Standard Deviations}
+#Quality Standard Deviations
+sd(redWine$quality)
+sd(whiteWine$quality)
+
+#Red wine Standard Deviations
+sd(redWine$quality)
+sd(redWine$alcohol)
+sd(redWine$residual.sugar)
+sd(redWine$pH)
+
+#White wine standard deviations
+sd(whiteWine$quality)
+sd(whiteWine$alcohol)
+sd(whiteWine$residual.sugar)
+sd(whiteWine$pH)
+
+```
+
+```{r visualizeWine echo=FALSE}
+#1.  Create visualizations for the data
+>>>>>>> bfdd2188e5a5ba218bd22cdd1fe4e61166fd2420
 #heat maps, histograms and scatter plots?
 
 #Heatmaps
@@ -50,20 +74,42 @@ heatmap(x = red_cor, col = col, symm = TRUE)
 heatmap(x = white_cor, col = col, symm = TRUE)
 
 #Histograms
-hist(redWine$quality)
-hist(whiteWine$quality)
+
+#Histograms
+hist(redWine$quality, main = "Red Wine Distribution", xlab = "Quality with Mean = 5.636 and SD = 0.8076", col ="red4")
+hist(whiteWine$quality, main = "White Wine Distribution", xlab = "Quality with Mean = 5.878 and SD = 0.8856", col = "lemonchiffon")
 
 library(grid)
 library(gridExtra)
 library (ggplot2)
-h1 <- ggplot(aes(density), data = redWine) + geom_histogram(bins = 30) 
 
-h2 <- ggplot(aes(alcohol), data = redWine) + geom_histogram(bins = 30)
+h1 <- ggplot(aes(density), data = redWine) + geom_histogram(bins = 30,fill= "tomato3",color="white")
+h1 <- h1 + ggtitle("Density Distribution") +theme(axis.title.x = element_blank())
 
-h3 <- ggplot(aes(quality), data = redWine) + geom_histogram(bins = 7)
+h2 <- ggplot(aes(alcohol), data = redWine) + geom_histogram(bins = 30, fill= "tomato3",color="white")
+h2 <- h2 + ggtitle("Alcohol Distribution") +theme(axis.title.x = element_blank())
 
+h3 <- ggplot(aes(residual.sugar), data = redWine) + geom_histogram(bins = 7, fill= "tomato3",color="white")
+h3 <- h3 + ggtitle("Sugar Distribution") + theme(axis.title.x = element_blank())
 
-grid.arrange(h1,h2,h3,ncol=2)
+h4 <- ggplot(aes(pH), data = redWine) + geom_histogram(bins = 7, fill= "tomato3",color="white")
+h4 <- h4 + ggtitle("pH Distribution")+theme(axis.title.x = element_blank())
+
+grid.arrange(h1,h2,h3,h4,ncol=2)
+
+g1 <- ggplot(aes(density), data = whiteWine) + geom_histogram(bins = 25,fill= "lightgoldenrod2",color="white")
+g1 <- g1 +  ggtitle("Density Distribution") + theme(axis.title.x = element_blank())
+
+g2 <- ggplot(aes(alcohol), data = whiteWine) + geom_histogram(bins = 20, fill= "lightgoldenrod2",color="white")
+g2 <- g2 + ggtitle("Alcohol Distribution") + theme(axis.title.x = element_blank())
+
+g3 <- ggplot(aes(residual.sugar), data = whiteWine) + geom_histogram(bins = 7, fill= "lightgoldenrod2",color="white")
+g3 <- g3 + ggtitle("Sugar Distribution") + theme(axis.title.x = element_blank())
+
+g4 <- ggplot(aes(pH), data = whiteWine) + geom_histogram(bins = 7, fill= "lightgoldenrod2",color="white")
+g4 <- g4 + ggtitle("pH Distribution") + theme(axis.title.x = element_blank())
+
+grid.arrange(g1,g2,g3,g4,ncol=2)
 
 ```
 
@@ -95,6 +141,17 @@ corrplot(white_cor, type = "upper", order = "hclust",
 #Correlation matrix with numbers
 corrplot(white_cor, method = 'number',type = "upper", order = "hclust", 
          tl.col = "black", tl.srt = 45)
+
+#Quality correlations
+dfred_cor<-data.frame(red_cor)
+dfwhite_cor<-data.frame(white_cor)
+names<-row.names(dfred_cor)
+
+QualityCor<-round(cbind(dfred_cor$quality,dfwhite_cor$quality),digits=4)
+colnames(QualityCor)<-c("Red Quality", "White Quality")
+row.names(QualityCor)<-names
+View(QualityCor)
+
 ##Reference: http://www.sthda.com/english/wiki/correlation-matrix-a-quick-start-guide-to-analyze-format-and-visualize-a-correlation-matrix-using-r-software
 ```
 
