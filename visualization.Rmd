@@ -30,11 +30,18 @@ knitr::kable(head(redWine))
 #install.packages("plotly")
 library(plotly) #data visualization
 
+#Converting the quality attribute from numeric to factor
 redWine$bquality <- ifelse(redWine$quality < 5, "Mediocre", ifelse(redWine$quality <7 , "Average", ifelse(redWine$quality >6, "Excellent", NA)))
 
 plot_ly(data = redWine, x = ~bquality, y = ~alcohol, color = ~bquality, type = "box", colors = "Dark2")
+plot_ly(data = redWine, x = ~bquality, y = ~density, color = ~bquality, type = "box", colors = "Dark2")
+
+##Important Note for the Red Wine: Excellent wine is high on alcohol and low in density
 
 ```
+##Important Note for the Red Wine: Excellent wine is high on alcohol and low in density
+
+#Model Training (Regression Tree)
 ```{r trees}
 
 #install.packages("rpart")
@@ -46,12 +53,16 @@ library(rattle)
 
 #Recursive Partitioning and Regression Trees
 #Reference:https://www.rdocumentation.org/packages/rpart/versions/4.1-15/topics/rpart
-
+nrows<-nrow(redWine)
+cutPoint<- floor(nrows/3*2)
+cutPoint
+rand<-sample(1:nrows)
 #training set
-red_train <- redWine[1:3750, ]
+red_train <- redWine[rand[1:cutPoint],]
 
 #test set
-red_test <- redWine[3751:4898, ]
+red_test <- redWine[rand[(cutPoint+1:nrows)],]
+red_test<-na.omit(red_test)
 
 w.rpart <- rpart(quality ~. , data = red_train)
 
@@ -63,4 +74,52 @@ prediction <- predict(w.rpart,red_test)
 
 summary(prediction)
 summary(red_test$quality)
+
+##Important Note for the Red Wine: From the summaries above, the model does really great at estimating the bad and the excellent wine
+
+#Mean Absolute Error
+MAE <- function(actual, predicted){
+  mean(abs(actual - predicted))
+}
+
+MAE(red_test$quality, prediction)
+
+##Important Note for the Red Wine: MAE= 0.39
+```
+##Important Note for the Red Wine: From the summaries above, the model does really great at estimating the bad and the excellent wine
+##Important Note for the Red Wine: MAE= 0.39
+
+#Model Tree
+###A model tree differs from a regression tree due to the fact that it runs multiple regression models at every node.
+```{r model tree}
+#install.packages("RWeka")
+library(RColorBrewer)
+library(rattle)
+library(RWeka)
+#building the model
+m.m5p <- M5P(quality ~. , data = red_train)
+
+# building the predictor
+p.m5p <- predict(m.m5p, red_test)
+
+m.m5p
+
+MAE(redWine$quality, p.m5p)
+```
+```{r tree2}
+installed.packages("tree")
+library(tree) 
+# predicting the cquality
+redWine$cquality <- ifelse(redWine$quality < 5, "Mediocre", ifelse(redWine$quality >6, "Excellent", NA))
+bquality<- as.factor(redWine$cquality)
+tree <- plot.tree(formula = cquality ~ ., data = red_train, 
+             method = "class",
+             control = tree.control(nobs = nrow(red_train),
+                                          mincut = 5,
+                                          minsize = 10,
+                                          mindev = .003))
+summary(tree)
+plot(tree, type = "uniform")
+text(tree, pretty = 0, cex = 1, col = "blue")
+title("Classification Tree")
 ```
