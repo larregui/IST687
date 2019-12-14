@@ -139,3 +139,121 @@ View(QualityCor)
 
 ##Reference: http://www.sthda.com/english/wiki/correlation-matrix-a-quick-start-guide-to-analyze-format-and-visualize-a-correlation-matrix-using-r-software
 ```
+```{r Tree Diagrams}
+# Taking a look at the correlation coefficients from the previous file, we see that density is moderately correlated with fixed.acidity (r=0.67) and alcohol (r=−0.5). Fixed.acidity is moderately correlated with citric.acid (r= 0.67) and ph (r=-0.68). Citric.acid is moderately correlated with volatile.acidity (r=-0.55) and ph (r=-0.54). Free.sulfur.dioxide and total.sulfur.dioxide are also moderately correlated with each other (r=0.67) although this is trivially known because free sulfur dioxide is incorporated into the total sulfur dioxide. Aside from that correlations are all very low, including quality.
+
+#table preview
+knitr::kable(head(redWine))
+
+#install.packages("plotly")
+library(plotly, warn.conflicts = FALSE) #data visualization
+
+#Converting the quality attribute from numeric to factor
+redWine$bquality <- ifelse(redWine$quality < 5, "Mediocre", ifelse(redWine$quality <7 , "Average", ifelse(redWine$quality >6, "Excellent", NA)))
+
+whiteWine$bquality <- ifelse(whiteWine$quality < 5, "Mediocre", ifelse(whiteWine$quality <7 , "Average", ifelse(whiteWine$quality >6, "Excellent", NA)))
+
+#BoxPlots
+
+#Red Wine
+##Important Note for the Red Wine: Excellent wine is high on alcohol and low in volatile.acidity
+plot_ly(data = redWine, x = ~bquality, y = ~alcohol, color = ~bquality, type = "box", colors = "Dark2")
+plot_ly(data = redWine, x = ~bquality, y = ~volatile.acidity, color = ~bquality, type = "box", colors = "Dark2")
+
+
+#White Wine
+##Important Note for the White Wine: Excellent wine is high on alcohol and low in density
+plot_ly(data = whiteWine, x = ~bquality, y = ~alcohol, color = ~bquality, type = "box", colors = "Dark2")
+plot_ly(data = whiteWine, x = ~bquality, y = ~density, color = ~bquality, type = "box", colors = "Dark2")
+
+```
+
+```{r trees red Wine}
+#Model Training (Regression Tree for Red Wine)
+#install.packages("rpart")
+#install.packages("rpart.plot")
+#install.packages("rattle")
+library(rpart,warn.conflicts = FALSE)
+library(rpart.plot,warn.conflicts = FALSE)
+library(rattle, warn.conflicts = FALSE)
+
+#Recursive Partitioning and Regression Trees **Red Wine**
+#Reference:https://www.rdocumentation.org/packages/rpart/versions/4.1-15/topics/rpart
+nrows<-nrow(redWine)
+cutPoint<- floor(nrows/3*2)
+cutPoint
+rand<-sample(1:nrows)
+#training set Red Wine
+red_train <- redWine[rand[1:cutPoint],]
+
+#test set Red Wine
+red_test <- redWine[rand[(cutPoint+1:nrows)],]
+red_test<-na.omit(red_test)
+
+w.rpart <- rpart(quality ~. , data = red_train)
+
+w.rpart
+
+rpart.plot(w.rpart, digits = 3)
+fancyRpartPlot(w.rpart)
+prediction <- predict(w.rpart,red_test)
+
+RWine.Pred<-as.matrix(summary(prediction)) # Summarizing results fro red Wine
+colnames(RWine.Pred)<-"RWine.Pred" # Add column names
+RWine.Test<-as.matrix(summary(red_test$quality))
+colnames(RWine.Test)<-"RWine.Test"
+
+RwineTree.Df<- data.frame(RWine.Pred,RWine.Test)
+
+##Important Note for the Red Wine: From the summaries above, the model does really great at estimating the bad and the excellent wine
+
+#Mean Absolute Error Function
+MAE <- function(actual, predicted){
+  MAE<-mean(abs(actual - predicted))
+}
+
+MAE.Red<-MAE(red_test$quality, prediction)
+MAE.Red
+
+##Important Note for the Red Wine: MAE= 0.39
+```
+
+```{r trees White Wine}
+#Recursive Partitioning and Regression Trees **White Wine**
+nrows.w<-nrow(whiteWine)
+cutPoint.w<- floor(nrows.w/3*2)
+cutPoint.w
+rand.w<-sample(1:nrows.w)
+#training set White Wine
+white_train <- whiteWine[rand.w[1:cutPoint.w],]
+
+#test set White Wine
+white_test <- whiteWine[rand.w[(cutPoint.w+1:nrows.w)],]
+white_test<-na.omit(white_test)
+
+w.rpartw <- rpart(quality ~. , data = white_train)
+
+w.rpartw
+
+rpart.plot(w.rpartw, digits = 3)
+fancyRpartPlot(w.rpartw)
+prediction.w <- predict(w.rpartw,white_test)
+
+WWine.Pred<-as.matrix(summary(prediction.w)) #Summarize results for White Wine
+colnames(WWine.Pred)<-"WWine.Pred" #Add column name
+WWine.Test<-as.matrix(summary(white_test$quality))
+colnames(WWine.Test)<-"WWine.Test"
+##Important Note for the White Wine: From the summaries above, the model does really great at estimating the bad and the excellent wine
+
+#Mean Absolute Error
+MAE.White<-MAE(white_test$quality, prediction.w)
+MAE.White
+##Important Note for the white Wine: MAE= 0.38
+```
+
+```{r trees Consolidated}
+##Consolidated Results for both Wine types
+
+wineTree.Df<- round(cbind(WWine.Pred,RWine.Pred,WWine.Test,RWine.Test),2)
+wineTree.Df
+```
