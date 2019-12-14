@@ -1,4 +1,4 @@
----
+----
 title: "Group 4 Project"
 author: "Laura Larregui, Angela Garcia, John Christman"
 date: "11/18/2019"
@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r readWines}
 readURL <- function(inputURL)  #Begin function named readURL that takes a URL
 {
-  csvFile <- read.csv(url(inputURL), sep = ';')  #assign the results of the URL call as a csv file to a dataframe named csvFile. Added sep = ';' to seperate the data into columns
+  csvFile <- read.csv(url(inputURL), sep = ';')  #assign the results of the URL call as a csv file to a dataframe named csvFile. Added sep = ';' to separate the data into columns
   return(csvFile)  # return the dataframe
 }
 
@@ -28,7 +28,7 @@ summary(whiteWine)
 ```
 
 ```{r cleanWine}
-#THe datasets only have one column of data.  The column names are separated by periods the data by semi-colons
+#The datasets only have one column of data.  The column names are separated by periods the data by semi-colons
 #1. Create columns 
 #2.  separate the data into the columns
 #3.  Verify no NAs
@@ -64,7 +64,7 @@ sd(whiteWine$pH)
 hist(redWine$quality, main = "Red Wine Distribution", xlab = "Quality with Mean = 5.636 and SD = 0.8076", col ="red4")
 hist(whiteWine$quality, main = "White Wine Distribution", xlab = "Quality with Mean = 5.878 and SD = 0.8856", col = "lemonchiffon")
 
-library(grid, warn.conflicts = FALSE) # Eliminate version warning when library is installed
+library(grid, warn.conflicts = FALSE) # Eliminate warning when library is installed
 library(gridExtra, warn.conflicts = FALSE)
 library (ggplot2, warn.conflicts = FALSE)
 
@@ -95,6 +95,7 @@ g4 <- ggplot(aes(pH), data = whiteWine) + geom_histogram(bins = 7, fill= "lightg
 g4 <- g4 + ggtitle("pH Distribution") + theme(axis.title.x = element_blank())
 
 grid.arrange(g1,g2,g3,g4,ncol=2)
+
 ```
 
 ```{r correlationWine}
@@ -139,6 +140,7 @@ View(QualityCor)
 
 ##Reference: http://www.sthda.com/english/wiki/correlation-matrix-a-quick-start-guide-to-analyze-format-and-visualize-a-correlation-matrix-using-r-software
 ```
+
 ```{r Tree Diagrams}
 # Taking a look at the correlation coefficients from the previous file, we see that density is moderately correlated with fixed.acidity (r=0.67) and alcohol (r=−0.5). Fixed.acidity is moderately correlated with citric.acid (r= 0.67) and ph (r=-0.68). Citric.acid is moderately correlated with volatile.acidity (r=-0.55) and ph (r=-0.54). Free.sulfur.dioxide and total.sulfur.dioxide are also moderately correlated with each other (r=0.67) although this is trivially known because free sulfur dioxide is incorporated into the total sulfur dioxide. Aside from that correlations are all very low, including quality.
 
@@ -256,4 +258,42 @@ MAE.White
 
 wineTree.Df<- round(cbind(WWine.Pred,RWine.Pred,WWine.Test,RWine.Test),2)
 wineTree.Df
+```
+
+```{r model tree Red Wine}
+#Model Tree
+###A model tree differs from a regression tree due to the fact that it runs multiple regression models at every node.
+
+#install.packages("RWeka")
+library(RColorBrewer,warn.conflicts = FALSE)
+library(rattle,warn.conflicts = FALSE)
+library(RWeka,warn.conflicts = FALSE)
+#building the model for Red Wine
+m.m5p <- M5P(quality ~. , data = red_train)
+
+# building the predictor for Red Wine
+p.m5p <- predict(m.m5p, red_test)
+
+m.m5p
+
+MAE(redWine$quality, rp.m5p)
+
+```
+
+```{r tree2}
+installed.packages("tree")
+library(tree,warn.conflicts = FALSE)
+# predicting the cquality
+redWine$cquality <- ifelse(redWine$quality < 5, "Mediocre", ifelse(redWine$quality >6, "Excellent", NA))
+cquality<- as.factor(redWine$cquality)
+tree <- plot(formula = cquality ~ ., data = red_train, 
+             method = "class",
+             control = tree.control(nobs = nrow(red_train),
+                                          mincut = 5,
+                                          minsize = 10,
+                                          mindev = .003))
+summary(tree)
+plot(tree, type = "uniform")
+text(tree, pretty = 0, cex = 1, col = "blue")
+title("Classification Tree")
 ```
