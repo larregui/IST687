@@ -1,0 +1,110 @@
+---
+title: "Tree_Diagrams"
+author: "Laura Larregui, John Christman, Angela Rivera"
+date: "12/3/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Taking a look at the correlation coefficients from the previous file, we see that density is moderately correlated with fixed.acidity (r=0.67) and alcohol (r=−0.5). Fixed.acidity is moderately correlated with citric.acid (r= 0.67) and ph (r=-0.68). Citric.acid is moderately correlated with volatile.acidity (r=-0.55) and ph (r=-0.54). Free.sulfur.dioxide and total.sulfur.dioxide are also moderately correlated with each other (r=0.67) although this is trivially known because free sulfur dioxide is incorporated into the total sulfur dioxide. Aside from that correlations are all very low, including quality.
+
+```{r visualization}
+readURL <- function(inputURL)  #Begin function named readURL that takes a URL
+{
+  csvFile <- read.csv(url(inputURL), sep = ';')  #assign the results of the URL call as a csv file to a dataframe named csvFile. Added sep = ';' to seperate the data into columns
+  return(csvFile)  # return the dataframe
+}
+redWine <- readURL("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv")
+whiteWine <- readURL("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv")
+# Verify no NAs
+redWine <- na.omit(redWine)
+whiteWine<-na.omit (whiteWine)
+#table preview
+knitr::kable(head(redWine))
+#install.packages("plotly")
+library(plotly) #data visualization
+redWine$bquality <- ifelse(redWine$quality < 5, "Mediocre", ifelse(redWine$quality <7 , "Average", ifelse(redWine$quality >6, "Excellent", NA)))
+plot_ly(data = redWine, x = ~bquality, y = ~alcohol, color = ~bquality, type = "box", colors = "Dark2")
+```
+```{r trees}
+#install.packages("rpart")
+#install.packages("rpart.plot")
+#install.packages("rattle")
+library(rpart)
+library(rpart.plot)
+library(rattle)
+#Recursive Partitioning and Regression Trees
+#Reference:https://www.rdocumentation.org/packages/rpart/versions/4.1-15/topics/rpart
+nrows <- nrow(redWine)
+cutPoint <- floor(nrows/3*2)
+rand <- sample(1:nrows)
+#training set
+red_train <- redWine[rand[1:cutPoint], ]
+#test set
+red_test <- redWine[rand[(cutPoint+1:nrows)], ]
+w.rpart <- rpart(quality ~ . , data = red_train)
+w.rpart
+rpart.plot(w.rpart, digits = 3)
+fancyRpartPlot(w.rpart)
+prediction <- predict(w.rpart,red_test)
+summary(prediction)
+summary(red_test$quality)
+        
+```
+```{r redForest}
+library(randomForest)  #call random forest library
+set.seed(100)  #set seed value
+red_rftrain <- na.omit(sample(nrow(redWine), 0.7*nrow(redWine), replace=FALSE))  #create a sample of values for training
+rwTrainSet <- na.omit(redWine[red_rftrain,])  #red wine training data
+rwTestSet <- na.omit(redWine[-red_rftrain,])  #red wine testing data
+rwTrainSet <- rwTrainSet[,-13]  #remove the last column (text of quality score)
+rwTestSet <- rwTestSet[,-13] #remove the last column (text of quality score)
+
+str(rwTrainSet)  #show training set details
+str(rwTestSet) #show testing set details
+
+rw2 <-  randomForest(quality ~ residual.sugar+density+pH+alcohol,data = rwTrainSet, ntree = 500, mtry = 6, importance = TRUE)
+#create a random forest for red wine quality based on residual sugar, density, pH and alcohol from the training data
+rw2  #display results of the random forest
+plot(rw2)  #plot results
+importance(rw2)  #display importance statistics 
+
+rwpredTrainSet <- predict(rw2, rwTrainSet, type = "class")  #predict the red wine quality score against the training data
+head(table(format(round(rwpredTrainSet,4),nsmall=4), rwTrainSet$quality), n=25)  #show the top 25 results of the confusion matrix.  Rounded the training set data prediction to 4 decimal places
+tail(table(format(round(rwpredTrainSet,4),nsmall=4), rwTrainSet$quality), n=25) #show the last 25 results of the confusion matrix.  Rounded the training set data prediction to 4 decimal places
+rwpredTestSet <- predict(rw2, rwTestSet, type = "class")  #predict the  red wine quality score against the test data
+paste0("The mean of values where the predicted value equals actual is ", mean((round(rwpredTestSet)) == rwTestSet$quality)) #Display the mean of matched values
+head(table(format(round(rwpredTestSet,4),nsmall=4), rwTestSet$quality), n=25) #show the top 25 results of the confusion matrix.  Rounded the test set data prediction to 4 decimal places
+tail(table(format(round(rwpredTestSet,4),nsmall=4), rwTestSet$quality), n=25) #show the last 25 results of the confusion matrix.  Rounded the test set data prediction to 4 decimal places
+
+
+
+
+white_rftrain <- na.omit(sample(nrow(whiteWine), 0.7*nrow(whiteWine), replace=FALSE)) #create a sample of values for training
+wwTrainSet <- na.omit(whiteWine[white_rftrain,]) #white wine training data
+wwTestSet <- na.omit(whiteWine[-white_rftrain,]) #white wine testing data
+wwTrainSet <- wwTrainSet[,-13]  #remove the last column (text of quality score)
+wwTestSet <- wwTestSet[,-13]  #remove the last column (text of quality score)
+
+str(wwTrainSet) #show training set details
+str(wwTestSet) #show testing set details
+ww2 <-  randomForest(quality ~ residual.sugar+density+pH+alcohol,data = wwTrainSet, ntree = 500, mtry = 6, importance = TRUE)
+#create a random forest for white wine quality based on residual sugar, density, pH and alcohol from the training data
+ww2 #display results of the random forest
+plot(ww2) #plot results
+importance(ww2) #display importance statistics
+
+wwpredTrainSet <- predict(ww2, wwTrainSet, type = "class") #predict the white wine quality score against the training data
+head(table(format(round(wwpredTrainSet,4),nsmall=4), wwTrainSet$quality), n=25)   #show the top 25 results of the confusion matrix.  Rounded the training set data prediction to 4 decimal places
+tail(table(format(round(wwpredTrainSet,4),nsmall=4), wwTrainSet$quality), n=25)   #show the bottom 25 results of the confusion matrix.  Rounded the training set data prediction to 4 decimal places
+wwpredTestSet <- predict(ww2, wwTestSet, type = "class")
+plot(wwpredTestSet) #plot results
+paste0("The mean of values where the predicted value equals actual is ", mean((round(wwpredTestSet)) == wwTestSet$quality))  #Display the mean of matched values
+head(table(format(round(wwpredTestSet,4),nsmall=4), wwTestSet$quality), n-25)   #show the top 25 results of the confusion matrix.  Rounded the testing set data prediction to 4 decimal places
+tail(table(format(round(wwpredTestSet,4),nsmall=4), wwTestSet$quality), n-25)   #show the bottom 25 results of the confusion matrix.  Rounded the testing set data prediction to 4 decimal places
+
+
+```
+
