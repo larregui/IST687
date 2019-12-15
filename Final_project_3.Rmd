@@ -65,16 +65,16 @@ rwTestSet <- rwTestSet[,-13] #remove the last column (text of quality score)
 str(rwTrainSet)  #show training set details
 str(rwTestSet) #show testing set details
 
-rw2 <-  randomForest(quality ~ residual.sugar+density+pH+alcohol,data = rwTrainSet, ntree = 500, mtry = 6, importance = TRUE)
+rw2 <-  randomForest(quality ~ volatile.acidity+chlorides+total.sulfur.dioxide+pH+sulphates+alcohol,data = rwTrainSet, ntree = 500, mtry = 6, importance = TRUE)
 #create a random forest for red wine quality based on residual sugar, density, pH and alcohol from the training data
 rw2  #display results of the random forest
 plot(rw2)  #plot results
 importance(rw2)  #display importance statistics 
-
 rwpredTrainSet <- predict(rw2, rwTrainSet, type = "class")  #predict the red wine quality score against the training data
 head(table(format(round(rwpredTrainSet,4),nsmall=4), rwTrainSet$quality), n=25)  #show the top 25 results of the confusion matrix.  Rounded the training set data prediction to 4 decimal places
 tail(table(format(round(rwpredTrainSet,4),nsmall=4), rwTrainSet$quality), n=25) #show the last 25 results of the confusion matrix.  Rounded the training set data prediction to 4 decimal places
 rwpredTestSet <- predict(rw2, rwTestSet, type = "class")  #predict the  red wine quality score against the test data
+plot(rwpredTestSet) #plot results
 paste0("The mean of values where the predicted value equals actual is ", mean((round(rwpredTestSet)) == rwTestSet$quality)) #Display the mean of matched values
 head(table(format(round(rwpredTestSet,4),nsmall=4), rwTestSet$quality), n=25) #show the top 25 results of the confusion matrix.  Rounded the test set data prediction to 4 decimal places
 tail(table(format(round(rwpredTestSet,4),nsmall=4), rwTestSet$quality), n=25) #show the last 25 results of the confusion matrix.  Rounded the test set data prediction to 4 decimal places
@@ -90,7 +90,7 @@ wwTestSet <- wwTestSet[,-13]  #remove the last column (text of quality score)
 
 str(wwTrainSet) #show training set details
 str(wwTestSet) #show testing set details
-ww2 <-  randomForest(quality ~ residual.sugar+density+pH+alcohol,data = wwTrainSet, ntree = 500, mtry = 6, importance = TRUE)
+ww2 <-  randomForest(quality ~ volatile.acidity+residual.sugar+free.sulfur.dioxide+density+pH+sulphates+alcohol,data = wwTrainSet, ntree = 500, mtry = 6, importance = TRUE)
 #create a random forest for white wine quality based on residual sugar, density, pH and alcohol from the training data
 ww2 #display results of the random forest
 plot(ww2) #plot results
@@ -102,8 +102,8 @@ tail(table(format(round(wwpredTrainSet,4),nsmall=4), wwTrainSet$quality), n=25) 
 wwpredTestSet <- predict(ww2, wwTestSet, type = "class")
 plot(wwpredTestSet) #plot results
 paste0("The mean of values where the predicted value equals actual is ", mean((round(wwpredTestSet)) == wwTestSet$quality))  #Display the mean of matched values
-head(table(format(round(wwpredTestSet,4),nsmall=4), wwTestSet$quality), n-25)   #show the top 25 results of the confusion matrix.  Rounded the testing set data prediction to 4 decimal places
-tail(table(format(round(wwpredTestSet,4),nsmall=4), wwTestSet$quality), n-25)   #show the bottom 25 results of the confusion matrix.  Rounded the testing set data prediction to 4 decimal places
+head(table(format(round(wwpredTestSet,4),nsmall=4), wwTestSet$quality), n=25)   #show the top 25 results of the confusion matrix.  Rounded the testing set data prediction to 4 decimal places
+tail(table(format(round(wwpredTestSet,4),nsmall=4), wwTestSet$quality), n=25)   #show the bottom 25 results of the confusion matrix.  Rounded the testing set data prediction to 4 decimal places
 
 
 ```
