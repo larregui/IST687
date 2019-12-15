@@ -1,0 +1,302 @@
+---
+title: "Tree"
+author: "Laura Larregui"
+date: "12/14/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# WHITE WINE
+# Exploratory Analysys
+```{r tree 1}
+
+readURL <- function(inputURL)  #Begin function named readURL that takes a URL
+{
+  csvFile <- read.csv(url(inputURL), sep = ';')  #assign the results of the URL call as a csv file to a dataframe named csvFile. Added sep = ';' to seperate the data into columns
+  return(csvFile)  # return the dataframe
+}
+
+redWine <- readURL("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv")
+whiteWine <- readURL("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv")
+
+cor(whiteWine)
+
+hist(whiteWine$alcohol, col="#EE3B3B", main="Histogram of Alcohol Percent in White Wine", xlab="Alcohol Percent", ylab="Number of samples", las=1)
+
+hist(whiteWine$density, col="#BCEE6B", main="Histogram of White Wine Density", xlab="Density", ylab="Number of samples", las=1) 
+
+hist(whiteWine$chlorides, col="#CDB79E", main="Histogram of Chlorides in White Wine", xlab="Chlorides", ylab="Number of samples", las=1)
+
+hist(whiteWine$quality, col="#458B74", main="White Wine Quality Histogram", xlab="Quality", ylab="Number of samples") 
+```
+# Factorizing a variable
+```{r tree 2}
+table(whiteWine$quality)
+```
+
+# 45 % of the scores are at score 6
+# The categorical variable we want is either: High or Low.
+# 1 to 5 low and 6 to 9 high
+```{r tree 3}
+quality_fac <- ifelse(whiteWine$quality >= 6, "high", "low") 
+whitewine_data <- data.frame(whiteWine, quality_fac)
+table(whitewine_data$quality_fac) 
+#High  3258 Low 1640 We can now remove the old integer quality variable 
+whitewine_data <- whitewine_data[,-12]
+```
+#Splitting data into training and testing
+```{r tree 4}
+set.seed(71) 
+training_size <- round(0.8 * dim(whitewine_data)[1]) 
+training_sample <- sample(dim(whitewine_data)[1], training_size, replace=FALSE)
+training_data <- whitewine_data[training_sample,] 
+testing_data <- whitewine_data[-training_sample,]
+testing_size <- round(0.2 * dim(whitewine_data)[1]) 
+testing_sample <- sample(dim(whitewine_data)[1], testing_size, replace=FALSE)
+
+```
+#80 % of the data set is training data. 20% is testing data
+
+#Using C50
+```{r c50}
+library(C50)
+C50_model <- C5.0(quality_fac~., data=training_data) 
+predict_C50 <- predict(C50_model, testing_data[,-12]) 
+testing_high <- quality_fac[testing_sample] 
+C50_model
+summary(C50_model)
+# missclassification error 
+mean(predict_C50 != testing_high) 
+#0.4316327  So the misclassification error for this model is 43% 
+```
+# So the misclassification error for this model is 43%
+```{r c501}
+library(ROCR)
+predict_C50_num <- as.numeric(predict_C50) 
+actual_num <- as.numeric(testing_data$quality_fac) 
+pr <- prediction(predict_C50_num, actual_num) 
+auc_data1 <- performance(pr, "tpr", "fpr") 
+plot(auc_data1, main="ROC Curve for C50 Model") 
+aucval1 <- performance(pr, measure="auc") 
+aucval1@y.values[[1]] 
+# area under the curve value = 0.7497127. 
+```
+# So, the area under the curve value for the C50 model =  0.7497127
+
+# Using the Tree Model
+```{r ctree}
+library(tree)
+tree_model <- tree(quality_fac~., data=training_data) 
+predict_tree <- predict(tree_model, testing_data[,-12], type="class")
+mean(predict_tree != testing_high) 
+#So the misclassification error for the tree model is almost 43% 
+tree_model
+summary(tree_model)
+plot(tree_model)
+text(tree_model, pretty = 0, cex = 1, col = "blue")
+title("Classification Tree")
+
+predict_tree_num <- as.numeric(predict_tree) 
+pr2 <- prediction(predict_tree_num, actual_num) 
+auc_data2 <- performance(pr2, "tpr", "fpr") 
+plot(auc_data2, main="ROC Curve for Tree Model") 
+
+aucval2 <- performance(pr2, measure="auc") 
+aucval2@y.values[[1]] 
+#So, the area under the curve value for the tree model = 0.6948789 
+```
+# Using rpart
+```{r rpart1}
+library (rpart)
+library(rpart.plot)
+rpart_model <- rpart(quality_fac~., data=training_data, method="class")
+rpart_model
+predict_rpart <- predict(rpart_model, testing_data[,-12], type="class") 
+mean(predict_rpart != testing_high) 
+#So the misclassification error for the tree model is 40% 
+rpart.plot(rpart_model, extra=101) 
+#We can plot the tree and show the correctly and incorrectly classified instances 
+predict_rpart_num <- as.numeric(predict_rpart) 
+pr3 <- prediction(predict_rpart_num, actual_num) 
+auc_data3 <- performance(pr3, "tpr", "fpr") 
+plot(auc_data3, main="ROC Curve for RPART Model") 
+aucval3 <- performance(pr3, measure="auc") 
+aucval3@y.values[[1]] 
+#So, the area under the curve value for the tree model = 0.6935567 
+```
+# Results Comparison
+```{r comparison}
+#nrowsw<-nrow(whitewine_data)
+#cutPoint<- floor(nrowsw/3*2)
+#cutPoint
+#rand<-sample(1:nrowsw)
+#training set
+#white_train <- whitewine_data[rand[1:cutPoint],]
+
+#test set
+#white_test <- whitewine_data[rand[(cutPoint+1:nrows)],]
+#white_test<-na.omit(white_test)
+
+testing<- quality_fac[testing_sample] 
+
+#C50 Model
+table(testing,predicted=predict_C50)
+#557 correctly classified (57%)
+#423 incorrectly classified (43%)
+
+
+# Tree Model
+table(testing,predicted=predict_tree)
+#557 correctly classified (57%)
+#423 incorrectly classified (43%)
+
+
+# RPart Model
+table(testing,predicted=predict_rpart)
+#557 correctly classified (57%)
+#423 incorrectly classified (43%)
+```
+
+# Red WINE
+# Exploratory Analysys
+```{r tree 1}
+
+readURL <- function(inputURL)  #Begin function named readURL that takes a URL
+{
+  csvFile <- read.csv(url(inputURL), sep = ';')  #assign the results of the URL call as a csv file to a dataframe named csvFile. Added sep = ';' to seperate the data into columns
+  return(csvFile)  # return the dataframe
+}
+
+redWine <- readURL("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv")
+whiteWine <- readURL("https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv")
+
+cor(redWine)
+
+hist(redWine$alcohol, col="#EE3B3B", main="Histogram of Alcohol Percent in Red Wine", xlab="Alcohol Percent", ylab="Number of samples", las=1)
+
+hist(redWine$density, col="#BCEE6B", main="Histogram of White Red Density", xlab="Density", ylab="Number of samples", las=1) 
+
+hist(redWine$pH, col="#CDB79E", main="Histogram of pH in Red Wine", xlab="Chlorides", ylab="Number of samples", las=1)
+
+hist(redWine$quality, col="#458B74", main="Red Wine Quality Histogram", xlab="Quality", ylab="Number of samples") 
+```
+# Factorizing a variable
+```{r tree 2}
+table(redWine$quality)
+```
+
+# 43 % of the scores are at score 5
+# The categorical variable we want is either: High or Low.
+# 3 to 5 low and 6 to 8 high
+```{r tree 3}
+rquality_fac <- ifelse(redWine$quality >= 6, "high", "low") 
+redwine_data <- data.frame(redWine, rquality_fac)
+table(redwine_data$rquality_fac) 
+#High  855 Low 744 We can now remove the old integer quality variable 
+redwine_data <- redwine_data[,-12]
+```
+#Splitting data into training and testing
+```{r tree 4}
+set.seed(71) 
+rtraining_size <- round(0.8 * dim(redwine_data)[1]) 
+rtraining_sample <- sample(dim(redwine_data)[1], rtraining_size, replace=FALSE)
+rtraining_data <- redwine_data[rtraining_sample,] 
+rtesting_data <- redwine_data[-rtraining_sample,]
+rtesting_size <- round(0.2 * dim(redwine_data)[1]) 
+rtesting_sample <- sample(dim(redwine_data)[1], rtesting_size, replace=FALSE)
+
+```
+#80 % of the data set is training data. 20% is testing data
+
+#Using C50
+```{r c50}
+library(C50)
+rC50_model <- C5.0(rquality_fac~., data=rtraining_data) 
+rpredict_C50 <- predict(rC50_model, rtesting_data[,-12]) 
+rtesting_high <- rquality_fac[rtesting_sample] 
+rC50_model
+summary(rC50_model)
+# missclassification error 
+mean(rpredict_C50 != rtesting_high) 
+#0.54  So the misclassification error for this model is 54% 
+```
+# So the misclassification error for this model is 54%
+```{r c501}
+library(ROCR)
+rpredict_C50_num <- as.numeric(rpredict_C50) 
+ractual_num <- as.numeric(rtesting_data$rquality_fac) 
+rpr <- prediction(rpredict_C50_num, ractual_num) 
+rauc_data1 <- performance(rpr, "tpr", "fpr") 
+plot(rauc_data1, main="ROC Curve for C50 Model") 
+raucval1 <- performance(rpr, measure="auc") 
+raucval1@y.values[[1]] 
+# area under the curve value = 0.7614702. 
+```
+# So, the area under the curve value for the C50 model =  0.7614702
+
+# Using the Tree Model
+```{r ctree}
+library(tree)
+rtree_model <- tree(rquality_fac~., data=rtraining_data) 
+rpredict_tree <- predict(rtree_model, rtesting_data[,-12], type="class")
+mean(rpredict_tree != rtesting_high) 
+#So the misclassification error for the tree model is almost 52% 
+rtree_model
+summary(rtree_model)
+plot(rtree_model)
+text(rtree_model, pretty = 0, cex = 1, col = "blue")
+title("Classification Tree")
+
+rpredict_tree_num <- as.numeric(rpredict_tree) 
+rpr2 <- prediction(rpredict_tree_num, ractual_num) 
+rauc_data2 <- performance(rpr2, "tpr", "fpr") 
+plot(rauc_data2, main="ROC Curve for Tree Model") 
+
+raucval2 <- performance(rpr2, measure="auc") 
+raucval2@y.values[[1]] 
+#So, the area under the curve value for the tree model = 0.7615684 
+```
+# Using rpart
+```{r rpart1}
+library (rpart)
+library(rpart.plot)
+rrpart_model <- rpart(rquality_fac~., data=rtraining_data, method="class")
+rrpart_model
+rpredict_rpart <- predict(rrpart_model, rtesting_data[,-12], type="class") 
+mean(rpredict_rpart != rtesting_high) 
+#So the misclassification error for the tree model is 51.25% 
+rpart.plot(rrpart_model, extra=101) 
+#We can plot the tree and show the correctly and incorrectly classified instances 
+rpredict_rpart_num <- as.numeric(rpredict_rpart) 
+rpr3 <- prediction(rpredict_rpart_num, ractual_num) 
+rauc_data3 <- performance(rpr3, "tpr", "fpr") 
+plot(rauc_data3, main="ROC Curve for RPART Model") 
+raucval3 <- performance(rpr3, measure="auc") 
+raucval3@y.values[[1]] 
+#So, the area under the curve value for the tree model = 0.730739 
+```
+# Results Comparison
+```{r comparison}
+
+rtesting<- rquality_fac[rtesting_sample] 
+
+#C50 Model
+table(rtesting,predicted=rpredict_C50)
+#146 correctly classified (46%)
+#174 incorrectly classified (54%)
+
+
+# Tree Model
+table(rtesting,predicted=rpredict_tree)
+#155 correctly classified (48%)
+#165 incorrectly classified (52%)
+
+
+# RPart Model
+table(rtesting,predicted=rpredict_rpart)
+#156 correctly classified (49%)
+#164 incorrectly classified (51%)
+```
